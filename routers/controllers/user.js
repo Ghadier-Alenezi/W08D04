@@ -1,5 +1,7 @@
 const userModel = require("./../../db/models/user");
-const taskModel = require("./../../db/models/task");
+// const postModel = require("./../../db/models/post");
+// const likeModel = require("./../../db/models/like");
+// const commentModel = require("./../../db/models/comment");
 
 const bcrypt = require("bcrypt");
 const jwt = require("jsonwebtoken");
@@ -9,13 +11,15 @@ const SALT = Number(process.env.SALT);
 const secret = process.env.SECRET_KEY;
 
 const register = async (req, res) => {
-  const { email, password, role } = req.body;
+  const { userName, email, password, avatar, role } = req.body;
   const savedEmail = email.toLowerCase();
   const hashedPassword = await bcrypt.hash(password, SALT);
 
   const newUser = new userModel({
+    userName,
     email: savedEmail,
     password: hashedPassword,
+    avatar,
     role,
   });
   newUser
@@ -29,40 +33,78 @@ const register = async (req, res) => {
 };
 
 const login = (req, res) => {
-  const { email, password } = req.body;
-  const savedEmail = email.toLowerCase();
-
+  const { userInput, password } = req.body;
   userModel
-    .findOne({ email: savedEmail })
+    .findOne({ $or: [{ email: userInput }, { userName: userInput }] })
     .then(async (result) => {
       if (result) {
-        if (result.email == savedEmail) {
+        if (result.email === userInput || result.userName === userInput) {
           const hashedPassword = await bcrypt.compare(
             password,
             result.password
           );
           const payload = {
             role: result.role,
+            id: result._id,
           };
           const options = {
             expiresIn: "600m",
           };
           if (hashedPassword) {
-            const token = jwt.json(payload, secret, options);
+            const token = jwt.sign(payload, secret, options);
+            // console.log(token);
             res.status(200).json({ result, token });
           } else {
-            res.status(400).send("invalid email or password");
+            res.status(400).send("invalid user name or password");
           }
         } else {
-          res.status(400).send("invalid email or password");
+          res.status(400).send("invalid user name or password");
         }
       } else {
-        res.status(404).send("this email not exist!");
+        res.status(404).send("this user name not exist!");
       }
     })
     .catch((err) => {
       console.log(err);
     });
+
+  // if (email) {
+  //   const savedEmail = email.toLowerCase();
+  //   userModel
+  //     .findOne({ email: savedEmail })
+  //     .then(async (result) => {
+  //       if (result) {
+  //         console.log(result);
+  //         if (result.email == savedEmail) {
+  //           const hashedPassword = await bcrypt.compare(
+  //             password,
+  //             result.password
+  //           );
+  //           const payload = {
+  //             role: result.role,
+  //             id: result._id
+  //           };
+  //           const options = {
+  //             expiresIn: "600m",
+  //           };
+  //           if (hashedPassword) {
+  //             const token = jwt.sign(payload, secret, options);
+
+  //             res.status(200).json({ result, token });
+  //           } else {
+  //             res.status(400).send("invalid email or password");
+  //           }
+  //         } else {
+  //           res.status(400).send("invalid email or password");
+  //         }
+  //       } else {
+  //         res.status(404).send("this email not exist!");
+  //       }
+  //     })
+  //     .catch((err) => {
+  //       console.log(err);
+  //     });
+  // }
 };
 
 const users = (req, res) => {
@@ -76,23 +118,23 @@ const users = (req, res) => {
     });
 };
 
+// soft delete please with it's comments & posts :)
 const deleteUser = (req, res) => {
   const { id } = req.params;
   userModel
-    .findByIdAndDelete(id)
+    .findByIdAndUpdate(id, { isDel: true })
     .then((result) => {
       if (result) {
-        // console.log(result._id);
-        // use user id to delete user data and tasks
-        taskModel
-          .deleteMany({ user: result._id })
-          .then((result) => {
-            // console.log(result);
-            res.status(200).json(result);
-          })
-          .catch((error) => {
-            res.status(400).send(error);
-          });
+        console.log(result);
+        // const softDelete = new userModel({
+        //   isDel: true,
+        //   userName,
+        //   email,
+        //   password,
+        // });
+        // softDelete.save().then((result) => {
+        //   res.status(200).json(result);
+        // });
       } else {
         res.status(400).send("no user with this id");
       }

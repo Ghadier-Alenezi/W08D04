@@ -10,7 +10,8 @@ userRouter.post("/register", register);
 userRouter.post("/login", login);
 
 // only admin can get all users and delete a user
-userRouter.get("/users", authentication, authorization, users);
-userRouter.delete("/user/:id", authentication, authorization, deleteUser);
+userRouter.get("/users", users);
+userRouter.put("/user/:id", deleteUser);
+// in this task we need soft delete
 
 module.exports = userRouter;
