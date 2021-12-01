@@ -2,21 +2,22 @@ const commentModel = require("../../db/models/comment");
 
 // add new comment
 const newComment = (req, res) => {
-  const { desc, user, post } = req.body;
-  const userComment = new commentModel({
-    desc,
-    user,
-    post,
-  });
-  userComment
-    .save()
-    .then((result) => {
+  const { desc, post } = req.body;
+  try {
+    const userComment = new commentModel({
+      desc,
+      post,
+      user: req.token.id,
+    });
+    userComment.save().then((result) => {
       // console.log(result);
       res.status(201).json(result);
-    })
-    .catch((err) => {
-      res.status(400).json(err);
     });
+  } catch {
+    (err) => {
+      res.status(400).json(err);
+    };
+  }
 };
 
 // get all comments ONLY admin
