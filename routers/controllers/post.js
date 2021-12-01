@@ -1,9 +1,5 @@
 const postModel = require("./../../db/models/post");
 
-const bcrypt = require("bcrypt");
-const jwt = require("jsonwebtoken");
-require("dotenv").config();
-
 // add new post
 const newPost = (req, res) => {
   const { title, desc, img, user } = req.body;
@@ -23,7 +19,7 @@ const newPost = (req, res) => {
     });
 };
 
-// get all post
+// get all post ONLY admin
 const getPosts = (req, res) => {
   try {
     postModel.find({}).then((result) => {
@@ -47,12 +43,12 @@ const getUserPosts = (req, res) => {
   }
 };
 
-// update post by user id
+// update post by post id
 const updatePost = (req, res) => {
   const { id } = req.params;
   const { title, desc, img } = req.body;
   try {
-    postModel.findByIdAndUpdate(id, { title, desc, img }).then((result) => {
+    postModel.findByIdAndUpdate(id, { title, desc, img }, {new: true}).then((result) => {
       // console.log(result);
       res.status(200).json(result);
     });
@@ -61,7 +57,7 @@ const updatePost = (req, res) => {
   }
 };
 
-// delete post by id
+// delete post by post id ONLY admin
 const deletePost = (req, res) => {
   const { id } = req.params;
   try {
@@ -75,6 +71,7 @@ const deletePost = (req, res) => {
     res.status(400).json(error);
   }
 };
+
 module.exports = {
   newPost,
   getUserPosts,

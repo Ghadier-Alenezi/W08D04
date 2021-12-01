@@ -1,7 +1,4 @@
 const userModel = require("./../../db/models/user");
-// const postModel = require("./../../db/models/post");
-// const likeModel = require("./../../db/models/like");
-// const commentModel = require("./../../db/models/comment");
 
 const bcrypt = require("bcrypt");
 const jwt = require("jsonwebtoken");
