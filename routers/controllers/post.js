@@ -83,30 +83,22 @@ const getPostById = (req, res) => {
 };
 
 // // user can delete the post by post id
-// const deleteUserPost = (req, res) => {
-//   // const { id } = req.params;
-//   try {
-//     postModel
-//       .find()
-//       .then((result) => {
-//         console.log(result);
-//         // console.log(req.token.id);
-//         // res.status(200).json(result);
-//       });
-//   } catch (error) {
-//     res.status(400).json(error);
-//   }
-// };
-
-// delete post by post id ONLY admin
 const deletePost = (req, res) => {
   const { id } = req.params;
   try {
     postModel
-      .findByIdAndUpdate(id, { isDel: true }, { new: true })
+      .findOne({ post: id, user: req.token.id, isDel: false })
       .then((result) => {
-        // console.log(result);
-        res.status(200).json(result);
+        if (result) {
+          postModel
+            .findByIdAndUpdate(id, { $set: { isDel: true } }, { new: true })
+            .then((result) => {
+              // console.log(result);
+              res.status(200).json(result);
+            });
+        }else{
+          res.status(404).json("you can't delete someone else comment!");
+        }
       });
   } catch (error) {
     res.status(400).json(error);
