@@ -60,7 +60,7 @@ const updatePost = (req, res) => {
               // console.log(result);
               res.status(200).json(result);
             });
-        }else{
+        } else {
           res.status(404).json("you can't update someone else comment!");
         }
       });
@@ -82,7 +82,7 @@ const getPostById = (req, res) => {
   }
 };
 
-// // user can delete the post by post id
+// user can delete the post by post id
 const deletePost = (req, res) => {
   const { id } = req.params;
   try {
@@ -96,9 +96,24 @@ const deletePost = (req, res) => {
               // console.log(result);
               res.status(200).json(result);
             });
-        }else{
+        } else {
           res.status(404).json("you can't delete someone else comment!");
         }
+      });
+  } catch (error) {
+    res.status(400).json(error);
+  }
+};
+
+// admin delete a post
+const deletePostByAdmin = (req, res) => {
+  const { id } = req.params;
+  try {
+    postModel
+      .findByIdAndUpdate(id, { $set: { isDel: true } }, { new: true })
+      .then((result) => {
+        // console.log(result);
+        res.status(200).json(result);
       });
   } catch (error) {
     res.status(400).json(error);
@@ -110,7 +125,7 @@ module.exports = {
   getUserPosts,
   updatePost,
   getPosts,
-  // deleteUserPost,
   getPostById,
   deletePost,
+  deletePostByAdmin
 };
