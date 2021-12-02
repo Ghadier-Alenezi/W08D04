@@ -1,4 +1,5 @@
 const userModel = require("./../../db/models/user");
+const postModle = require("./../../db/models/post");
 
 const bcrypt = require("bcrypt");
 const jwt = require("jsonwebtoken");
@@ -83,20 +84,21 @@ const users = (req, res) => {
 
 // soft delete please with it's comments & posts :)
 const deleteUser = (req, res) => {
+  // user id
   const { id } = req.params;
   try {
-    userModel.findByIdAndUpdate(id, { isDel: true }).then((result) => {
+    userModel.findByIdAndUpdate(id).then((result) => {
       if (result) {
         console.log(result);
-        // const softDelete = new userModel({
-        //   isDel: true,
-        //   userName,
-        //   email,
-        //   password,
-        // });
-        // softDelete.save().then((result) => {
-        //   res.status(200).json(result);
-        // });
+        const softDelete = new userModel({
+          isDel: true,
+          userName,
+          email,
+          password,
+        });
+        softDelete.save().then((result) => {
+          res.status(200).json(result);
+        });
       } else {
         res.status(400).send("no user with this id");
       }

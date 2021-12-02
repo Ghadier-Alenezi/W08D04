@@ -4,19 +4,22 @@ const postModel = require("./../../db/models/post");
 // add like to a post
 const liked = (req, res) => {
   // post id
-  const { id } = req.params;
   try {
-    postModel.findByIdA(id, () => {
-      const likedPost = new likeModel({
-        isLiked: true,
-        user: req.token.id,
-        post: id,
+    const { id } = req.params;
+    const newLike = new likeModel({
+      post: id,
+      user: req.token.id,
+      isLiked: true
+    },{new: true});
+    newLike
+      .save()
+      .then((result) => {
+        // console.log(result);
+        res.status(201).send(result);
+      })
+      .catch((err) => {
+        res.status(404).send(err);
       });
-      likedPost.save().then((result) => {
-        //   console.log(req.token.id);
-        res.status(201).json(result);
-      });
-    });
   } catch {
     (err) => {
       res.status(400).json(err);
