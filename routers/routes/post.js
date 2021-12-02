@@ -8,7 +8,7 @@ const {
   getPosts,
   deletePost,
   getPostById,
-  deletePostByAdmin
+  deletePostByAdmin,
 } = require("../controllers/post");
 const authentication = require("./../middleware/authentication");
 const authorization = require("./../middleware/authorization");

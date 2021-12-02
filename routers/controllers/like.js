@@ -6,27 +6,27 @@ const liked = (req, res) => {
   // post id
   const { id } = req.params;
   try {
-    postModel.findById(id).then((result) => {
-      // console.log(result);
-      const newLike = new likeModel(
-        {
+    postModel.findOne({ _id: id, isDel: false }).then((result) => {
+      if (result) {
+        // console.log(result);
+        const newLike = new likeModel({
           post: id,
           user: req.token.id,
           isLiked: true,
-        },
-        { new: true }
-      );
-      newLike
-        .save()
-        .then((result) => {
-          console.log(result);
-          res.status(201).send(result);
-        })
-        .catch((err) => {
-          res.status(404).send(err);
         });
+        newLike
+          .save()
+          .then((result) => {
+            res.status(201).send(result);
+          })
+          .catch((err) => {
+            res.status(404).send(err);
+          });
+      } else {
+        res.status(404).json("you can't like deleted post!");
+      }
     });
-    } catch {
+  } catch {
     (err) => {
       res.status(400).json(err);
     };

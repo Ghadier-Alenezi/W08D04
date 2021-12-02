@@ -1,5 +1,5 @@
 const postModel = require("./../../db/models/post");
-const commentModel = require("./../../db/models/comment");
+// const commentModel = require("./../../db/models/comment");
 
 // add new post
 const newPost = (req, res) => {
@@ -127,5 +127,5 @@ module.exports = {
   getPosts,
   getPostById,
   deletePost,
-  deletePostByAdmin
+  deletePostByAdmin,
 };
