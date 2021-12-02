@@ -1,4 +1,5 @@
 const postModel = require("./../../db/models/post");
+const commentModel = require("./../../db/models/comment");
 
 // add new post
 const newPost = (req, res) => {
@@ -23,7 +24,7 @@ const newPost = (req, res) => {
 // get all post ONLY admin
 const getPosts = (req, res) => {
   try {
-    postModel.find({}).then((result) => {
+    postModel.find({ isDel: false }).then((result) => {
       // console.log(result);
       res.status(200).json(result);
     });
@@ -47,18 +48,55 @@ const getUserPosts = (req, res) => {
 // update post by post id
 const updatePost = (req, res) => {
   const { id } = req.params;
-  const { title, desc, img } = req.body;
+  const { desc } = req.body;
   try {
     postModel
-      .findByIdAndUpdate(id, { title, desc, img, user: req.token.id }, { new: true })
+      .findOne({ post: id, user: req.token.id, isDel: false })
       .then((result) => {
-        // console.log(result);
-        res.status(200).json(result);
+        if (result) {
+          postModel
+            .findByIdAndUpdate(id, { $set: { desc: desc } }, { new: true })
+            .then((result) => {
+              // console.log(result);
+              res.status(200).json(result);
+            });
+        }else{
+          res.status(404).json("you can't update someone else comment!");
+        }
       });
   } catch (error) {
     res.status(400).json(error);
   }
 };
+
+// get post by Id ONLY admin
+const getPostById = (req, res) => {
+  const { id } = req.params;
+  try {
+    postModel.findById(id).then((result) => {
+      // console.log(result);
+      res.status(200).json(result);
+    });
+  } catch (error) {
+    res.status(400).json(error);
+  }
+};
+
+// // user can delete the post by post id
+// const deleteUserPost = (req, res) => {
+//   // const { id } = req.params;
+//   try {
+//     postModel
+//       .find()
+//       .then((result) => {
+//         console.log(result);
+//         // console.log(req.token.id);
+//         // res.status(200).json(result);
+//       });
+//   } catch (error) {
+//     res.status(400).json(error);
+//   }
+// };
 
 // delete post by post id ONLY admin
 const deletePost = (req, res) => {
@@ -80,5 +118,7 @@ module.exports = {
   getUserPosts,
   updatePost,
   getPosts,
+  // deleteUserPost,
+  getPostById,
   deletePost,
 };

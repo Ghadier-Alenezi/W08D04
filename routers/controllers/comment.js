@@ -34,9 +34,12 @@ const comments = (req, res) => {
 // get comment by user Id
 const userComment = (req, res) => {
   try {
-    commentModel.find({ isDel: false, user: req.token.id }).then((result) => {
-      res.status(200).json(result);
-    });
+    commentModel
+      .find({ isDel: false, user: req.token.id })
+      // .populate("post","title desc img -_id")
+      .then((result) => {
+        res.status(200).json(result);
+      });
   } catch (error) {
     res.status(400).json(error);
   }
