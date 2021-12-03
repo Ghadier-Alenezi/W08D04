@@ -2,15 +2,15 @@ const commentModel = require("../../db/models/comment");
 
 // add new comment
 const newComment = (req, res) => {
-  const { desc, post } = req.body;
+  const { id } = req.params; //post id
+  const { desc } = req.body;
   try {
     const userComment = new commentModel({
       desc,
-      post,
       user: req.token.id,
+      post: id
     });
     userComment.save().then((result) => {
-      // console.log(result);
       res.status(201).json(result);
     });
   } catch {
@@ -25,7 +25,7 @@ const comments = (req, res) => {
   try {
     commentModel
       .find()
-      .populate("user", "userName email -_id") //Khamees update explain populate
+      .populate("user", "userName -_id")
       .populate("post", "desc -_id") 
       .then((result) => {
         res.status(200).json(result);
@@ -40,7 +40,8 @@ const userComment = (req, res) => {
   try {
     commentModel
       .find({ isDel: false, user: req.token.id })
-      // .populate("post","title desc img -_id")
+      .populate("user", "userName -_id")
+      .populate("post", "title -_id") 
       .then((result) => {
         res.status(200).json(result);
       });
@@ -51,8 +52,8 @@ const userComment = (req, res) => {
 
 // update comment by id
 const updateComment = (req, res) => {
-  const { id } = req.params;
-  const { desc } = req.body;
+  const { id } = req.params; //post id
+  const { desc } = req.body; //update comment desc
   try {
     commentModel
       .findByIdAndUpdate(id, { desc }, { new: true })

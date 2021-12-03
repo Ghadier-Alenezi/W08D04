@@ -33,7 +33,10 @@ const liked = (req, res) => {
 // get all likes ONLY admin
 const allLikes = (req, res) => {
   try {
-    likeModel.find().then((result) => {
+    likeModel.find()
+    .populate("user", "userName -_id")
+    .populate("post", "title -_id")
+    .then((result) => {
       // console.log(result);
       res.status(200).json(result);
     });
