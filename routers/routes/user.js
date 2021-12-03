@@ -9,7 +9,7 @@ const authorization = require("./../middleware/authorization");
 userRouter.post("/register", register);
 userRouter.post("/login", login);
 
-// only admin can s all users and delete a user
+// only admin can show all users and delete a user
 userRouter.get("/users", authentication, authorization, users);
 userRouter.put("/user/:id", authentication, authorization, deleteUser);
 // in this task we need soft delete

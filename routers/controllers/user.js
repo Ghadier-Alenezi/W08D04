@@ -71,6 +71,7 @@ const login = (req, res) => {
   }
 };
 
+// show all users ONLY admin
 const users = (req, res) => {
   try {
     userModel.find({}).then((result) => {

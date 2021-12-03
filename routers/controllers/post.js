@@ -11,9 +11,14 @@ const newPost = (req, res) => {
       img,
       user: req.token.id,
     });
-    newPost.save().then((result) => {
-      res.status(201).json(result);
-    });
+    newPost
+      .save()
+      .then((result) => {
+        res.status(201).json(result);
+      })
+      .catch((err) => {
+        res.status(400).json(err);
+      });
   } catch {
     (err) => {
       res.status(400).send(err);
@@ -24,10 +29,13 @@ const newPost = (req, res) => {
 // get all post ONLY admin
 const getPosts = (req, res) => {
   try {
-    postModel.find({ isDel: false }).then((result) => {
-      // console.log(result);
-      res.status(200).json(result);
-    });
+    postModel
+      .find({ isDel: false })
+      .populate("user", "userName -_id")
+      .then((result) => {
+        // console.log(result);
+        res.status(200).json(result);
+      });
   } catch (error) {
     res.status(400).json(error);
   }
@@ -36,10 +44,14 @@ const getPosts = (req, res) => {
 // get post by user id
 const getUserPosts = (req, res) => {
   try {
-    // console.log(req.token.id);
-    postModel.find({ isDel: false, user: req.token.id }).then((result) => {
-      res.status(200).json(result);
-    });
+    postModel
+      .find({ isDel: false, user: req.token.id })
+      .populate("user", "userName -_id")
+      .then((result) => {
+        if (result) {
+          res.status(200).json(result);
+        }
+      });
   } catch (error) {
     res.status(400).json(error);
   }
@@ -73,10 +85,13 @@ const updatePost = (req, res) => {
 const getPostById = (req, res) => {
   const { id } = req.params;
   try {
-    postModel.findById(id).then((result) => {
-      // console.log(result);
-      res.status(200).json(result);
-    });
+    postModel
+      .findById(id)
+      .populate("user", "userName -_id")
+      .then((result) => {
+        // console.log(result);
+        res.status(200).json(result);
+      });
   } catch (error) {
     res.status(400).json(error);
   }
