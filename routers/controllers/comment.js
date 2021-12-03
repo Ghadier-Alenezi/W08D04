@@ -23,9 +23,13 @@ const newComment = (req, res) => {
 // get all comments ONLY admin
 const comments = (req, res) => {
   try {
-    commentModel.find({}).then((result) => {
-      res.status(200).json(result);
-    });
+    commentModel
+      .find()
+      .populate("user", "userName email -_id") //Khamees update explain populate
+      .populate("post", "desc -_id") 
+      .then((result) => {
+        res.status(200).json(result);
+      });
   } catch (error) {
     res.status(400).json(error);
   }

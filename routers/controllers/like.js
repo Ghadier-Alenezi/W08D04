@@ -6,9 +6,10 @@ const liked = (req, res) => {
   // post id
   const { id } = req.params;
   try {
-    postModel.findOne({ _id: id, isDel: false }).then((result) => {
+    likeModel.findOneAndRemove({ post: id }).then((result) => {
       if (result) {
-        // console.log(result);
+        res.status(200).send("disliked");
+      } else {
         const newLike = new likeModel({
           post: id,
           user: req.token.id,
@@ -22,21 +23,17 @@ const liked = (req, res) => {
           .catch((err) => {
             res.status(404).send(err);
           });
-      } else {
-        res.status(404).json("you can't like deleted post!");
       }
     });
-  } catch {
-    (err) => {
-      res.status(400).json(err);
-    };
+  } catch (error) {
+    res.status(400).json(error);
   }
 };
 
-// get all likes
+// get all likes ONLY admin
 const allLikes = (req, res) => {
   try {
-    likeModel.find({}).then((result) => {
+    likeModel.find().then((result) => {
       // console.log(result);
       res.status(200).json(result);
     });
