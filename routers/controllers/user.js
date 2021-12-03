@@ -1,6 +1,7 @@
 const userModel = require("./../../db/models/user");
 const postModle = require("./../../db/models/post");
 const commentModle = require("./../../db/models/comment");
+const likeModle = require("./../../db/models/like");
 
 const bcrypt = require("bcrypt");
 const jwt = require("jsonwebtoken");
@@ -74,7 +75,7 @@ const login = (req, res) => {
 // show all users ONLY admin
 const users = (req, res) => {
   try {
-    userModel.find({}).then((result) => {
+    userModel.find({ isDel: false }).then((result) => {
       res.status(200).json(result);
     });
   } catch {
@@ -84,17 +85,32 @@ const users = (req, res) => {
   }
 };
 
-// soft delete to a user ONLY admin
+// soft delete to a user with posts,comments and likes ONLY admin
 const deleteUser = (req, res) => {
   const { id } = req.params; // user id
   try {
-    userModel.findById(id).then((result) => {
+    userModel.findByIdAndUpdate(id, { isDel: true }).then((result) => {
       if (result) {
-        userModel.findByIdAndUpdate(id, { isDel: true }).then((result) => {
-          res.status(200).json(result);
-        });
+        postModle
+          .updateMany({ user: id, isDel: false }, { isDel: true })
+          .then((result) => {
+            console.log("delete user posts");
+          });
+        commentModle
+          .updateMany({ user: id, isDel: false }, { isDel: true })
+          .then((result) => {
+            console.log("delete user comments");
+          });
+        likeModle
+          .deleteMany({ user: id })
+          .then((result) => {
+            console.log("delete user likes");
+          })
+          .then((result) => {
+            res.status(200).json("user soft deleted! Done");
+          });
       } else {
-        res.status(400).send("no user with this id");
+        res.status(400).send("there is no user whith this id");
       }
     });
   } catch {

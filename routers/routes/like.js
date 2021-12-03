@@ -7,6 +7,6 @@ const authentication = require("./../middleware/authentication");
 const authorization = require("./../middleware/authorization");
 
 likeRouter.post("/liked/:id", authentication, liked);
-likeRouter.get("/allLikes", authentication, authorization, allLikes);
+likeRouter.get("/allLikes", authentication, allLikes);
 
 module.exports = likeRouter;

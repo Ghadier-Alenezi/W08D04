@@ -24,7 +24,7 @@ const newComment = (req, res) => {
 const comments = (req, res) => {
   try {
     commentModel
-      .find()
+      .find({isDel: false})
       .populate("user", "userName -_id")
       .populate("post", "desc -_id") 
       .then((result) => {
