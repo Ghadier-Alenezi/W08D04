@@ -86,16 +86,11 @@ const users = (req, res) => {
 
 // soft delete to a user ONLY admin
 const deleteUser = (req, res) => {
-  // user id
-  const { id } = req.params;
+  const { id } = req.params; // user id
   try {
-    userModel.findByIdAndUpdate(id).then((result) => {
+    userModel.findById(id).then((result) => {
       if (result) {
-        console.log(result);
-        const softDelete = new userModel({
-          isDel: true,
-        });
-        softDelete.save().then((result) => {
+        userModel.findByIdAndUpdate(id, { isDel: true }).then((result) => {
           res.status(200).json(result);
         });
       } else {
