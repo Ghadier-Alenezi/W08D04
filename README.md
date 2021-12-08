@@ -12,7 +12,7 @@
 * ### post model functios, all crud operations create a new post, read all posts & read a post by id, update the post and soft delete a post 
 ---
 # UML Diagram:
-![alt text](http://url/to/img.png)
+![alt text](https://github.com/Ghadier-Alenezi/W08D04/blob/main/UMLdiagram.png)
 
 ---
 packages we use: 
