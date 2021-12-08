@@ -13,7 +13,9 @@
 ---
 # UML Diagram:
 ![alt text](https://github.com/Ghadier-Alenezi/W08D04/blob/main/UMLdiagram.png)
-
+---
+# ERD
+![alt text](https://github.com/Ghadier-Alenezi/W08D04/blob/main/ERD.png)
 ---
 packages we use: 
 *  Express to build the server
