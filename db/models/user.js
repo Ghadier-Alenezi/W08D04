@@ -5,7 +5,12 @@ const user = new mongoose.Schema({
   email: { type: String, required: true, unique: true },
   password: { type: String, required: true },
   avatar: { type: String },
-  isDel: {type: Boolean, default: false},
+  isDel: { type: Boolean, default: false },
+  verified: {
+    type: Boolean,
+    default: false,
+    required: true,
+  },
   role: [{ type: mongoose.Schema.Types.ObjectId, ref: "Role" }],
 });
 
