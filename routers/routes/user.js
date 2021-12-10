@@ -7,7 +7,7 @@ const {
   users,
   deleteUser,
   verifyEmail,
-  verTokens,
+  resetPassword
 } = require("../controllers/user");
 const authentication = require("./../middleware/authentication");
 const authorization = require("./../middleware/authorization");
@@ -16,7 +16,7 @@ const authorization = require("./../middleware/authorization");
 userRouter.post("/register", register);
 userRouter.post("/login", login);
 userRouter.post("/verifyEmail", verifyEmail);
-userRouter.get("/verTokens", verTokens);
+userRouter.post("/resetPassword", resetPassword);
 
 // only admin can show all users and delete a user
 userRouter.get("/users", authentication, authorization, users);

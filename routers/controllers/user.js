@@ -3,15 +3,20 @@ const postModle = require("./../../db/models/post");
 const commentModle = require("./../../db/models/comment");
 const likeModle = require("./../../db/models/like");
 const VerificationToken = require("./../../db/models/verificationToken");
+const ResetToken = require("./../../db/models/resetToken");
+
 const bcrypt = require("bcrypt");
 const jwt = require("jsonwebtoken");
+
 const {
   generateOTP,
   mailTransport,
   generateEmailTemplate,
   plainEmailTemplate,
+  passwordResetTemplate,
 } = require("../utils/sendMail");
-const { sendErr } = require("../utils/sendErr");
+
+const { sendErr, creatRandomBytes } = require("../utils/helper");
 const { isValidObjectId } = require("mongoose");
 
 require("dotenv").config();
@@ -77,15 +82,16 @@ const login = (req, res) => {
               id: result._id,
             };
             const options = {
-              expiresIn: "600m",
+              expiresIn: "6000m",
             };
+            // console.log(result.verified);
+            if (!result.verified) {
+              return res.status(401).send({
+                message: "Pending Account. Please Verify Your Email!",
+              });
+            }
             if (hashedPassword) {
               const token = jwt.sign(payload, secret, options);
-              if (result.status != "Active") {
-                return res.status(401).send({
-                  message: "Pending Account. Please Verify Your Email!",
-                });
-              }
               // console.log(token);
               res.status(200).json({ result, token });
             } else {
@@ -166,6 +172,7 @@ const verTokens = (req, res) => {
   }
 };
 
+//verifyEmail function
 const verifyEmail = async (req, res) => {
   try {
     const { userId, otp } = req.body;
@@ -184,9 +191,10 @@ const verifyEmail = async (req, res) => {
     if (!isMatched) sendErr(res, "please provide a valid token!");
 
     await userModel.findByIdAndUpdate(userId, { verified: true });
-
+    // console.log("here is printing!");
     await VerificationToken.findByIdAndDelete(token._id);
     await userModel().save();
+    // console.log("here is not!");
 
     mailTransport().sendMail({
       from: "emailVerfication@email.com",
@@ -197,7 +205,8 @@ const verifyEmail = async (req, res) => {
         "Than You For Connecting with us"
       ),
     });
-    res.json({
+
+    res.send({
       success: true,
       message: "Your email is verified",
       user: {
@@ -212,4 +221,42 @@ const verifyEmail = async (req, res) => {
     };
   }
 };
-module.exports = { register, login, users, deleteUser, verifyEmail, verTokens };
+
+const resetPassword = async (req, res) => {
+  const { email } = req.body;
+  if (!email) return sendErr(res, "Please provide valid email");
+
+  const user = await userModel.findOne({ email });
+  if (!user) return sendErr(res, "User not found");
+
+  const token = await ResetToken.findOne({ owner: user._id });
+  if (token)
+    return sendErr(res, "after one hour you can request for another token!");
+
+  const randomBytes = await creatRandomBytes();
+  console.log(randomBytes);
+  const resetToken = new ResetToken({ owner: user._id, token: randomBytes });
+  await resetToken.save();
+
+  mailTransport().sendMail({
+    from: "emailVerfication@email.com",
+    to: newUser.email,
+    subject: "Verify your email account",
+    html: passwordResetTemplate(
+      `http://localhost:3000/resetPassword?token=${randomBytes}&id=${user._id}`
+    ),
+  });
+  res.json({
+    success: true,
+    message: "password reset link is sent to your email.",
+  });
+};
+module.exports = {
+  register,
+  login,
+  users,
+  deleteUser,
+  verifyEmail,
+  verTokens,
+  resetPassword,
+};
