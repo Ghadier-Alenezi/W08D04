@@ -1,7 +1,7 @@
 const mongoose = require("mongoose");
 const bcrypt = require("bcrypt");
 
-const resetToken = new mongoose.Schema({
+const ResetToken = new mongoose.Schema({
   owner: {
     type: mongoose.Schema.Types.ObjectId,
     ref: "User",
@@ -18,7 +18,7 @@ const resetToken = new mongoose.Schema({
   },
 });
 
-resetToken.pre("save", async function (next) {
+ResetToken.pre("save", async function (next) {
   if (this.isModified("token")) {
     const hash = await bcrypt.hash(this.token, 8);
     this.token = hash;
@@ -26,8 +26,8 @@ resetToken.pre("save", async function (next) {
   next();
 });
 
-resetToken.methods.compareToken = async function (token) {
+ResetToken.methods.compareToken = async function (token) {
   const result = await bcrypt.compareSync(token, this.token);
   return result;
 };
-module.exports = mongoose.model("ResetTokenToken", resetToken);
+module.exports = mongoose.model("ResetTokenToken", ResetToken);

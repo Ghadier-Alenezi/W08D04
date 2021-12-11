@@ -48,7 +48,6 @@ const register = async (req, res) => {
     await newUser.save();
 
     mailTransport().sendMail({
-      from: "emailVerfication@email.com",
       to: newUser.email,
       subject: "Verify your email account",
       html: generateEmailTemplate(OTP),
@@ -197,7 +196,7 @@ const verifyEmail = async (req, res) => {
     // console.log("here is not!");
 
     mailTransport().sendMail({
-      from: "emailVerfication@email.com",
+      from: process.env.MAILTRAP_USERNAME,
       to: user.email,
       subject: "Welcome Email",
       html: plainEmailTemplate(
@@ -222,35 +221,73 @@ const verifyEmail = async (req, res) => {
   }
 };
 
-const resetPassword = async (req, res) => {
-  const { email } = req.body;
-  if (!email) return sendErr(res, "Please provide valid email");
+const forgetPassword = async (req, res) => {
+  try {
+    const { email } = req.body;
+    if (!email) return sendErr(res, "Please provide valid email");
 
-  const user = await userModel.findOne({ email });
-  if (!user) return sendErr(res, "User not found");
+    const user = await userModel.findOne({ email });
+    if (!user) return sendErr(res, "User not found");
 
-  const token = await ResetToken.findOne({ owner: user._id });
-  if (token)
-    return sendErr(res, "after one hour you can request for another token!");
+    const token = await ResetToken.findOne({ owner: user._id });
+    if (token)
+      return sendErr(res, "after one hour you can request for another token!");
+    // console.log("toke,", token);
+    const randomBytes = await creatRandomBytes();
+    // return console.log("randomBytes", randomBytes);
+    const resetToken = new ResetToken({ owner: user._id, token: randomBytes });
+    await resetToken.save();
 
-  const randomBytes = await creatRandomBytes();
-  console.log(randomBytes);
-  const resetToken = new ResetToken({ owner: user._id, token: randomBytes });
-  await resetToken.save();
-
-  mailTransport().sendMail({
-    from: "emailVerfication@email.com",
-    to: newUser.email,
-    subject: "Verify your email account",
-    html: passwordResetTemplate(
-      `http://localhost:3000/resetPassword?token=${randomBytes}&id=${user._id}`
-    ),
-  });
-  res.json({
-    success: true,
-    message: "password reset link is sent to your email.",
-  });
+    mailTransport().sendMail({
+      from: process.env.MAILTRAP_USERNAME,
+      to: user.email,
+      subject: "Reset your password",
+      html: passwordResetTemplate(
+        `http://localhost:3000/resetPassword?token=${randomBytes}&id=${user._id}`
+      ),
+    });
+    res.json({
+      success: true,
+      message: "password reset link is sent to your email.",
+    });
+  } catch (error) {
+    res.status(400).send(error);
+  }
 };
+
+const resetPassword = async (req, res) => {
+  try {
+    const { password } = req.body;
+
+    const user = await userModel.findById(req.user._id);
+    if (!user) return sendErr(res, "user not found");
+
+    const isSamePassword = await user.comparePassword(password);
+    if (isSamePassword) return sendErr(res, "inter a new password");
+
+    if (password.trim().length < 6 || password.trim().length < 20)
+      return sendErr(res, "password must be 6 to 20 characters long!");
+
+    user.password = password.trim();
+    await user.save();
+
+    // await ResetToken.findOneAndDelete({ owner: user._id });
+
+    mailTransport().sendMail({
+      from: process.env.MAILTRAP_USERNAME,
+      to: user.email,
+      subject: "Reset your password successfully",
+      html: plainEmailTemplate(
+        "Password Reset Successfully",
+        "Now ypu can login with your new password"
+      ),
+    });
+    res.send({ success: true, message: "Password Reset Successfully" });
+  } catch (error) {
+    res.status(400).send(error);
+  }
+};
+
 module.exports = {
   register,
   login,
@@ -258,5 +295,6 @@ module.exports = {
   deleteUser,
   verifyEmail,
   verTokens,
+  forgetPassword,
   resetPassword,
 };

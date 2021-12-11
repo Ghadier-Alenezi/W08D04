@@ -9,18 +9,25 @@ const {
   deletePost,
   getPostById,
   deletePostByAdmin,
+  likePost,
 } = require("../controllers/post");
 const authentication = require("./../middleware/authentication");
 const authorization = require("./../middleware/authorization");
 
+postRouter.get("/posts", getPosts);
 postRouter.post("/newPost", authentication, newPost);
 postRouter.get("/userPost", authentication, getUserPosts);
 postRouter.put("/updatePost/:id", authentication, updatePost);
-postRouter.put("/deletePost/:id", authentication, deletePost);
+postRouter.put("/:id", authentication, deletePost);
+postRouter.put("likePost/:id", authentication, likePost);
+postRouter.get("/post/:id", authentication, getPostById);
 
-// only admin can show all posts and show one post by id, delete a post
-postRouter.get("/posts", authentication, authorization, getPosts);
-postRouter.get("/post/:id", authentication, authorization, getPostById);
-postRouter.put("/post/:id", authentication, authorization, deletePostByAdmin);
+// only admin delete any post
+postRouter.put(
+  "/posts/post/:id",
+  authentication,
+  authorization,
+  deletePostByAdmin
+);
 
 module.exports = postRouter;

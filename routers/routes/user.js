@@ -7,16 +7,19 @@ const {
   users,
   deleteUser,
   verifyEmail,
+  forgetPassword,
   resetPassword
 } = require("../controllers/user");
 const authentication = require("./../middleware/authentication");
 const authorization = require("./../middleware/authorization");
+const isResetTokenValid = require("../middleware/user");
 
 // any user can register and login
 userRouter.post("/register", register);
 userRouter.post("/login", login);
 userRouter.post("/verifyEmail", verifyEmail);
-userRouter.post("/resetPassword", resetPassword);
+userRouter.post("/forgetPassword", forgetPassword);
+userRouter.post("/resetPassword", isResetTokenValid, resetPassword);
 
 // only admin can show all users and delete a user
 userRouter.get("/users", authentication, authorization, users);

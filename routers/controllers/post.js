@@ -60,14 +60,15 @@ const getUserPosts = (req, res) => {
 // update post by post id
 const updatePost = (req, res) => {
   const { id } = req.params;
-  const { desc } = req.body;
+  const { title, desc, img } = req.body;
   try {
     postModel
       .findOne({ post: id, user: req.token.id, isDel: false })
       .then((result) => {
         if (result) {
+          const updatedPost = { title, desc, img, _id: id };
           postModel
-            .findByIdAndUpdate(id, { $set: { desc: desc } }, { new: true })
+            .findByIdAndUpdate(id, updatedPost, { new: true })
             .then((result) => {
               // console.log(result);
               res.status(200).json(result);
@@ -135,6 +136,22 @@ const deletePostByAdmin = (req, res) => {
   }
 };
 
+// number of likes
+const likePost = async (req, res) => {
+  try {
+    const { id } = req.params;
+    const post = await postModel.findById(id);
+    const updatedPost = await postModel.findByIdAndUpdate(
+      id,
+      { likeCount: post.likeCount + 1 },
+      { new: true }
+    );
+    res.json(updatedPost);
+  } catch (error) {
+    res.status(400).json(error);
+  }
+};
+
 module.exports = {
   newPost,
   getUserPosts,
@@ -143,4 +160,5 @@ module.exports = {
   getPostById,
   deletePost,
   deletePostByAdmin,
+  likePost,
 };
