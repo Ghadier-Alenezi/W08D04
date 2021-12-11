@@ -4,7 +4,7 @@ const commentModle = require("./../../db/models/comment");
 const likeModle = require("./../../db/models/like");
 const VerificationToken = require("./../../db/models/verificationToken");
 const ResetToken = require("./../../db/models/resetToken");
-
+const { OAuth2Client } = require("google-auth-library");
 const bcrypt = require("bcrypt");
 const jwt = require("jsonwebtoken");
 
@@ -18,8 +18,12 @@ const {
 
 const { sendErr, creatRandomBytes } = require("../utils/helper");
 const { isValidObjectId } = require("mongoose");
+const { response } = require("express");
 
 require("dotenv").config();
+const client = new OAuth2Client(
+  "801305115124-kp5gtb7a2f1ej1e2bgi7gqrh1iio4l9t.apps.googleusercontent.com"
+);
 
 const SALT = Number(process.env.SALT);
 const secret = process.env.SECRET_KEY;
@@ -288,6 +292,66 @@ const resetPassword = async (req, res) => {
   }
 };
 
+// log in with google
+const googlelogin = async (req, res) => {
+  try {
+    const { tokenId } = req.body;
+    client
+      .verifyIdToken({
+        idToken: tokenId,
+        audience:
+          "801305115124-kp5gtb7a2f1ej1e2bgi7gqrh1iio4l9t.apps.googleusercontent.com",
+      })
+      .then((res) => {
+        const { email_verfied, userName, email } = response.payload;
+        console.log(response);
+        if (email_verfied) {
+          userModel.findOne({ email }).exec((err, user) => {
+            if (err) {
+              return res.status(400).json({
+                error: "Somethig went wrong...",
+              });
+            } else {
+              if (user) {
+                const token = jwt.sign({ _id: user._id }, secret, {
+                  expiresIn: "7d",
+                });
+                const { _id, name, email } = user;
+
+                res.json({
+                  token,
+                  user: { _id, name, email },
+                });
+              } else {
+                let password = email + token;
+                let newUser = new userModel({ userName, email, password });
+                newUser.save((err, data) => {
+                  if (err) {
+                    return res.status(400).json({
+                      error: "Somethig went wrong...",
+                    });
+                  }
+                  const token = jwt.sign({ _id: data._id }, secret, {
+                    expiresIn: "7d",
+                  });
+                  const { _id, name, email } = newUser;
+
+                  res.json({
+                    token,
+                    user: { _id, name, email },
+                  });
+                });
+              }
+            }
+          });
+        }
+      });
+
+    // console.log(tokenId);
+  } catch (error) {
+    res.status(400).send(error);
+  }
+};
 module.exports = {
   register,
   login,
@@ -297,4 +361,5 @@ module.exports = {
   verTokens,
   forgetPassword,
   resetPassword,
+  googlelogin,
 };
