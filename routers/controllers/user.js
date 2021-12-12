@@ -29,11 +29,12 @@ const SALT = Number(process.env.SALT);
 const secret = process.env.SECRET_KEY;
 
 const register = async (req, res) => {
-  const { userName, email, password, avatar, role } = req.body;
+  const { name, userName, email, password, avatar, role } = req.body;
   const savedEmail = email.toLowerCase();
   const hashedPassword = await bcrypt.hash(password, SALT);
   try {
     const newUser = new userModel({
+      name,
       userName,
       email: savedEmail,
       password: hashedPassword,
@@ -303,8 +304,8 @@ const googlelogin = async (req, res) => {
           "801305115124-kp5gtb7a2f1ej1e2bgi7gqrh1iio4l9t.apps.googleusercontent.com",
       })
       .then((res) => {
-        const { email_verfied, userName, email } = response.payload;
-        console.log(response);
+        const { email_verfied, name, email } = res.payload;
+        console.log(res);
         if (email_verfied) {
           userModel.findOne({ email }).exec((err, user) => {
             if (err) {
@@ -313,9 +314,13 @@ const googlelogin = async (req, res) => {
               });
             } else {
               if (user) {
-                const token = jwt.sign({ _id: user._id }, secret, {
-                  expiresIn: "7d",
-                });
+                const token = jwt.sign(
+                  { _id: user._id },
+                  process.env.JWT_SIGNIN_KEY,
+                  {
+                    expiresIn: "7d",
+                  }
+                );
                 const { _id, name, email } = user;
 
                 res.json({
@@ -324,7 +329,7 @@ const googlelogin = async (req, res) => {
                 });
               } else {
                 let password = email + token;
-                let newUser = new userModel({ userName, email, password });
+                let newUser = new userModel({ name, email, password });
                 newUser.save((err, data) => {
                   if (err) {
                     return res.status(400).json({
