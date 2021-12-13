@@ -2,7 +2,7 @@ const mongoose = require("mongoose");
 
 const user = new mongoose.Schema({
   name: { type: String, required: true },
-  userName: { type: String, required: true, unique: true },
+  userName: { type: String, required: true },
   email: { type: String, required: true, unique: true },
   password: { type: String, required: true },
   avatar: { type: String },
@@ -12,7 +12,7 @@ const user = new mongoose.Schema({
     default: false,
     required: true,
   },
-  role: [{ type: mongoose.Schema.Types.ObjectId, ref: "Role" }],
+  role: { type: mongoose.Schema.Types.ObjectId, ref: "Role",  default:"61a750d07acff210a70d2b8c" },
 });
 
 user.pre("save", async function (next) {

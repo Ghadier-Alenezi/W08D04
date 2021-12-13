@@ -1,4 +1,6 @@
 const commentModel = require("../../db/models/comment");
+const postModel = require("../../db/models/post")
+const like = require("../../db/models/like")
 
 // add new comment
 const newComment = (req, res) => {
@@ -11,7 +13,9 @@ const newComment = (req, res) => {
       post: id
     });
     userComment.save().then((result) => {
-      res.status(201).json(result);
+      postModel.findByIdAndUpdate(id, { $push : {comment: result._id}}).then((result)=>{
+        res.status(201).json(result);
+    })
     });
   } catch {
     (err) => {
@@ -26,7 +30,6 @@ const comments = (req, res) => {
     commentModel
       .find({isDel: false})
       .populate("user", "userName -_id")
-      .populate("post", "desc -_id") 
       .then((result) => {
         res.status(200).json(result);
       });
@@ -79,6 +82,7 @@ const deleteComment = (req, res) => {
     res.status(400).json(error);
   }
 };
+
 module.exports = {
   newComment,
   comments,

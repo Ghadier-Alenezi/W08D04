@@ -1,5 +1,6 @@
 const postModel = require("./../../db/models/post");
-// const commentModel = require("./../../db/models/comment");
+const commentModel = require("./../../db/models/comment");
+const likeModel = require("./../../db/models/like");
 
 // add new post
 const newPost = (req, res) => {
@@ -31,7 +32,6 @@ const getPosts = (req, res) => {
   try {
     postModel
       .find({ isDel: false })
-      .populate("user", "userName -_id")
       .then((result) => {
         // console.log(result);
         res.status(200).json(result);
@@ -89,8 +89,7 @@ const getPostById = (req, res) => {
     postModel
       .findById(id)
       .populate("user", "userName -_id")
-      .then((result) => {
-        // console.log(result);
+      .then(async (result) => {
         res.status(200).json(result);
       });
   } catch (error) {
@@ -152,6 +151,34 @@ const likePost = async (req, res) => {
   }
 };
 
+// comments of the post
+const postCommentLike = async (req, res) => {
+  const { id } = req.params; //post id
+  try {
+    let allPost = [];
+    postModel
+      .findOne({ _id: id })
+      .populate("user")
+      .then((result) => {
+        allPost.push(result);
+        commentModel
+          .findOne({ post: id })
+          .populate("user", "userName")
+          .then((result2) => {
+            allPost.push(result2);
+            likeModel
+              .find({ post: id })
+              .populate("user", "userName")
+              .then((result3) => {
+                allPost.push(result3);
+                res.status(200).json(allPost);
+              });
+          });
+      });
+  } catch (error) {
+    res.status(400).json(error);
+  }
+};
 module.exports = {
   newPost,
   getUserPosts,
@@ -161,4 +188,5 @@ module.exports = {
   deletePost,
   deletePostByAdmin,
   likePost,
+  postCommentLike
 };
