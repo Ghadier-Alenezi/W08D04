@@ -162,7 +162,7 @@ const postCommentLike = async (req, res) => {
       .then((result) => {
         allPost.push(result);
         commentModel
-          .findOne({ post: id })
+          .find({ post: id })
           .populate("user", "userName")
           .then((result2) => {
             allPost.push(result2);

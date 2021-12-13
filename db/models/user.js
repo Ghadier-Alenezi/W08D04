@@ -5,7 +5,7 @@ const user = new mongoose.Schema({
   userName: { type: String, required: true },
   email: { type: String, required: true, unique: true },
   password: { type: String, required: true },
-  avatar: { type: String },
+  avatar: { type: String, default:"https://i.pinimg.com/564x/9e/81/da/9e81da69381d9920b0f1a264ce5d0879.jpg" },
   isDel: { type: Boolean, default: false },
   verified: {
     type: Boolean,
