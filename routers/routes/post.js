@@ -19,7 +19,7 @@ postRouter.get("/posts", getPosts);
 postRouter.post("/newPost", authentication, newPost);
 postRouter.get("/userPost", authentication, getUserPosts);
 postRouter.put("/updatePost/:id", authentication, updatePost);
-postRouter.put("/post/:id", authentication, deletePost);
+postRouter.put("/deletepost/:id", authentication, deletePost);
 postRouter.put("likePost/:id", authentication, likePost);
 postRouter.get("/post/:id", authentication, getPostById);
 postRouter.get("/postDetails/:id", authentication, postCommentLike);

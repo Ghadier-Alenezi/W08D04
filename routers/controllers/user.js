@@ -7,6 +7,7 @@ const ResetToken = require("./../../db/models/resetToken");
 const { OAuth2Client } = require("google-auth-library");
 const bcrypt = require("bcrypt");
 const jwt = require("jsonwebtoken");
+// const nodemailer = require("nodemailer");
 
 const {
   generateOTP,
@@ -21,27 +22,28 @@ const { isValidObjectId } = require("mongoose");
 const { response } = require("express");
 
 require("dotenv").config();
-const client = new OAuth2Client(
-  "801305115124-kp5gtb7a2f1ej1e2bgi7gqrh1iio4l9t.apps.googleusercontent.com"
-);
 
 const SALT = Number(process.env.SALT);
 const secret = process.env.SECRET_KEY;
 
 const register = async (req, res) => {
-  const { name, userName, email, password, avatar, role } = req.body;
+  const { userName, email, password, avatar, role } = req.body;
   const savedEmail = email.toLowerCase();
   const hashedPassword = await bcrypt.hash(password, SALT);
   try {
+    const existUser = await userModel.findOne({ email: savedEmail }).exec();
+    if (existUser) {
+      return res.status(409).send({
+        message: "Email is already exist!",
+      });
+    }
     const newUser = new userModel({
-      name,
       userName,
       email: savedEmail,
       password: hashedPassword,
       avatar,
       role,
     });
-
     const OTP = generateOTP();
     const verificationToken = new VerificationToken({
       owner: newUser._id,
@@ -53,6 +55,7 @@ const register = async (req, res) => {
     await newUser.save();
 
     mailTransport().sendMail({
+      from: process.env,EMAIL_USERNAME,
       to: newUser.email,
       subject: "Verify your email account",
       html: generateEmailTemplate(OTP),
@@ -198,7 +201,7 @@ const verifyEmail = async (req, res) => {
     // console.log("here is printing!");
     await VerificationToken.findByIdAndDelete(token._id);
     await userModel().save();
-    // console.log("here is not!");
+    console.log("here is not!");
 
     mailTransport().sendMail({
       from: process.env.MAILTRAP_USERNAME,
@@ -294,9 +297,12 @@ const resetPassword = async (req, res) => {
 };
 
 // log in with google
+const client = new OAuth2Client(
+  "801305115124-kp5gtb7a2f1ej1e2bgi7gqrh1iio4l9t.apps.googleusercontent.com"
+);
 const googlelogin = async (req, res) => {
+  const { tokenId } = req.body;
   try {
-    const { tokenId } = req.body;
     client
       .verifyIdToken({
         idToken: tokenId,
@@ -304,9 +310,9 @@ const googlelogin = async (req, res) => {
           "801305115124-kp5gtb7a2f1ej1e2bgi7gqrh1iio4l9t.apps.googleusercontent.com",
       })
       .then((res) => {
-        const { email_verfied, name, email } = res.payload;
+        const { email_verified, name, email, profileObj } = res.payload;
         console.log(res);
-        if (email_verfied) {
+        if (email_verified) {
           userModel.findOne({ email }).exec((err, user) => {
             if (err) {
               return res.status(400).json({
@@ -314,37 +320,43 @@ const googlelogin = async (req, res) => {
               });
             } else {
               if (user) {
+                const options = {
+                  expiresIn: "7d",
+                };
                 const token = jwt.sign(
-                  { _id: user._id },
-                  process.env.JWT_SIGNIN_KEY,
-                  {
-                    expiresIn: "7d",
-                  }
+                  { _id: user._id, role: user.role },
+                  process.env.secert_key,
+                  options
                 );
-                const { _id, name, email } = user;
-
-                res.json({
-                  token,
-                  user: { _id, name, email },
-                });
+                const result = {
+                  _id: user._idrsz,
+                  userName: name,
+                  email,
+                  role: "61a750d07acff210a70d2b8c",
+                };
+                res.status(200).json({ result, token });
               } else {
-                let password = email + token;
-                let newUser = new userModel({ name, email, password });
+                let password = email + process.env.secert_key;
+                const newUser = new userModel({
+                  userName: name,
+                  password,
+                  email,
+                  role: "61a750d07acff210a70d2b8c",
+                });
                 newUser.save((err, data) => {
                   if (err) {
-                    return res.status(400).json({
-                      error: "Somethig went wrong...",
-                    });
+                    return res.status(400).send(err);
                   }
-                  const token = jwt.sign({ _id: data._id }, secret, {
-                    expiresIn: "7d",
-                  });
-                  const { _id, name, email } = newUser;
-
-                  res.json({
-                    token,
-                    user: { _id, name, email },
-                  });
+                  console.log(data);
+                  const token = jwt.sign(
+                    { _id: data._id },
+                    process.env.secert_key,
+                    {
+                      expiresIn: "7d",
+                    }
+                  );
+                  const { _id, name, email, role } = newUser;
+                  res.status(200).json({ result: data, token });
                 });
               }
             }
@@ -357,6 +369,7 @@ const googlelogin = async (req, res) => {
     res.status(400).send(error);
   }
 };
+
 module.exports = {
   register,
   login,

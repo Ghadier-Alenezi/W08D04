@@ -30,12 +30,10 @@ const newPost = (req, res) => {
 // get all post ONLY admin
 const getPosts = (req, res) => {
   try {
-    postModel
-      .find({ isDel: false })
-      .then((result) => {
-        // console.log(result);
-        res.status(200).json(result);
-      });
+    postModel.find({ isDel: false }).then((result) => {
+      // console.log(result);
+      res.status(200).json(result);
+    });
   } catch (error) {
     res.status(400).json(error);
   }
@@ -43,15 +41,12 @@ const getPosts = (req, res) => {
 
 // get post by user id
 const getUserPosts = (req, res) => {
+  // const { id } = req.params; //user id
   try {
-    postModel
-      .find({ isDel: false, user: req.token.id })
-      .populate("user", "userName -_id")
-      .then((result) => {
-        if (result) {
-          res.status(200).json(result);
-        }
-      });
+    postModel.find( {user: req.token.id} ).then((result) => {
+      // console.log(result);
+      res.status(200).json(result);
+    });
   } catch (error) {
     res.status(400).json(error);
   }
@@ -162,7 +157,7 @@ const postCommentLike = async (req, res) => {
       .then((result) => {
         allPost.push(result);
         commentModel
-          .find({ post: id })
+          .find({ post: id , })
           .populate("user", "userName")
           .then((result2) => {
             allPost.push(result2);
@@ -188,5 +183,5 @@ module.exports = {
   deletePost,
   deletePostByAdmin,
   likePost,
-  postCommentLike
+  postCommentLike,
 };

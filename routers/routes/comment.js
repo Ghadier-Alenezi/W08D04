@@ -7,6 +7,7 @@ const {
   userComment,
   updateComment,
   deleteComment,
+  deleteComForEver
 } = require("./../controllers/comment");
 
 const authentication = require("./../middleware/authentication");
@@ -17,5 +18,6 @@ commentRouter.get("/comments", authentication, comments);
 commentRouter.get("/userComment", authentication, userComment);
 commentRouter.put("/updateComment/:id", authentication, updateComment);
 commentRouter.put("/deleteComment/:id", authentication, deleteComment);
+commentRouter.delete("/deleteComForEver/:id", authentication, deleteComForEver);
 
 module.exports = commentRouter;

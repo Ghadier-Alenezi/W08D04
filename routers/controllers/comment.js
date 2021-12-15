@@ -1,6 +1,6 @@
 const commentModel = require("../../db/models/comment");
-const postModel = require("../../db/models/post")
-const like = require("../../db/models/like")
+const postModel = require("../../db/models/post");
+const like = require("../../db/models/like");
 
 // add new comment
 const newComment = (req, res) => {
@@ -10,13 +10,16 @@ const newComment = (req, res) => {
     const userComment = new commentModel({
       desc,
       user: req.token.id,
-      post: id
+      post: id,
     });
     userComment.save().then((result) => {
-      postModel.findByIdAndUpdate(id, { $push : {comment: result._id}}).then((result)=>{
-        res.status(201).json(result);
-    })
+      postModel
+        .findByIdAndUpdate(id, { $push: { comment: result._id } })
+        .then((result) => {
+          // res.status(201).json(result);
+        });
     });
+    res.status(201).json(userComment);
   } catch {
     (err) => {
       res.status(400).json(err);
@@ -28,7 +31,7 @@ const newComment = (req, res) => {
 const comments = (req, res) => {
   try {
     commentModel
-      .find({isDel: false})
+      .find({ isDel: false })
       .populate("user", "userName -_id")
       .then((result) => {
         res.status(200).json(result);
@@ -44,7 +47,7 @@ const userComment = (req, res) => {
     commentModel
       .find({ isDel: false, user: req.token.id })
       .populate("user", "userName -_id")
-      .populate("post", "title -_id") 
+      .populate("post", "title -_id")
       .then((result) => {
         res.status(200).json(result);
       });
@@ -83,10 +86,22 @@ const deleteComment = (req, res) => {
   }
 };
 
+// delete comment
+const deleteComForEver = (req, res) => {
+  const { id } = req.params;
+  try {
+    commentModel.findByIdAndDelete(id).then((result) => {
+      res.status(200).json(result);
+    });
+  } catch (error) {
+    res.status(400).json(error);
+  }
+};
 module.exports = {
   newComment,
   comments,
   userComment,
   updateComment,
   deleteComment,
+  deleteComForEver
 };
