@@ -8,7 +8,6 @@ const { OAuth2Client } = require("google-auth-library");
 const bcrypt = require("bcrypt");
 const jwt = require("jsonwebtoken");
 // const nodemailer = require("nodemailer");
-
 const {
   generateOTP,
   mailTransport,
@@ -16,16 +15,12 @@ const {
   plainEmailTemplate,
   passwordResetTemplate,
 } = require("../utils/sendMail");
-
 const { sendErr, creatRandomBytes } = require("../utils/helper");
 const { isValidObjectId } = require("mongoose");
 const { response } = require("express");
-
 require("dotenv").config();
-
 const SALT = Number(process.env.SALT);
 const secret = process.env.SECRET_KEY;
-
 const register = async (req, res) => {
   const { userName, email, password, avatar, role } = req.body;
   const savedEmail = email.toLowerCase();
@@ -49,29 +44,22 @@ const register = async (req, res) => {
       owner: newUser._id,
       token: OTP,
     });
-
     await verificationToken.save();
-
     await newUser.save();
-
     mailTransport().sendMail({
       from: process.env,EMAIL_USERNAME,
       to: newUser.email,
       subject: "Verify your email account",
       html: generateEmailTemplate(OTP),
     });
-
     res
       .send(newUser)
-
-      .catch((error) => console.log(error));
   } catch {
     (err) => {
       res.status(400).send(err);
     };
   }
 };
-
 const login = (req, res) => {
   const { userInput, password } = req.body;
   try {
@@ -117,7 +105,6 @@ const login = (req, res) => {
     };
   }
 };
-
 // show all users ONLY admin
 const users = (req, res) => {
   try {
@@ -130,7 +117,6 @@ const users = (req, res) => {
     };
   }
 };
-
 // soft delete to a user with posts,comments and likes ONLY admin
 const deleteUser = (req, res) => {
   const { id } = req.params; // user id
@@ -165,7 +151,6 @@ const deleteUser = (req, res) => {
     };
   }
 };
-
 //all verToken
 const verTokens = (req, res) => {
   try {
@@ -178,7 +163,6 @@ const verTokens = (req, res) => {
     };
   }
 };
-
 //verifyEmail function
 const verifyEmail = async (req, res) => {
   try {
@@ -186,23 +170,18 @@ const verifyEmail = async (req, res) => {
     if (!userId || !otp.trim())
       return sendErr(res, "Invalid req, missing parameter");
     if (!isValidObjectId(userId)) return sendErr(res, "Invalid user id");
-
     const user = await userModel.findById(userId);
     if (!user) return sendErr(res, "User not found");
     if (user.verified) return sendErr(res, "this account is already verified");
-
     const token = await VerificationToken.findOne({ owner: user._id });
     if (!token) return sendErr(res, "Token not found");
-
     const isMatched = await token.compareToken(otp);
     if (!isMatched) sendErr(res, "please provide a valid token!");
-
     await userModel.findByIdAndUpdate(userId, { verified: true });
     // console.log("here is printing!");
     await VerificationToken.findByIdAndDelete(token._id);
     await userModel().save();
     console.log("here is not!");
-
     mailTransport().sendMail({
       from: process.env.MAILTRAP_USERNAME,
       to: user.email,
@@ -212,7 +191,6 @@ const verifyEmail = async (req, res) => {
         "Than You For Connecting with us"
       ),
     });
-
     res.send({
       success: true,
       message: "Your email is verified",
@@ -228,15 +206,12 @@ const verifyEmail = async (req, res) => {
     };
   }
 };
-
 const forgetPassword = async (req, res) => {
   try {
     const { email } = req.body;
     if (!email) return sendErr(res, "Please provide valid email");
-
     const user = await userModel.findOne({ email });
     if (!user) return sendErr(res, "User not found");
-
     const token = await ResetToken.findOne({ owner: user._id });
     if (token)
       return sendErr(res, "after one hour you can request for another token!");
@@ -245,7 +220,6 @@ const forgetPassword = async (req, res) => {
     // return console.log("randomBytes", randomBytes);
     const resetToken = new ResetToken({ owner: user._id, token: randomBytes });
     await resetToken.save();
-
     mailTransport().sendMail({
       from: process.env.MAILTRAP_USERNAME,
       to: user.email,
@@ -262,25 +236,18 @@ const forgetPassword = async (req, res) => {
     res.status(400).send(error);
   }
 };
-
 const resetPassword = async (req, res) => {
   try {
     const { password } = req.body;
-
     const user = await userModel.findById(req.user._id);
     if (!user) return sendErr(res, "user not found");
-
     const isSamePassword = await user.comparePassword(password);
     if (isSamePassword) return sendErr(res, "inter a new password");
-
     if (password.trim().length < 6 || password.trim().length < 20)
       return sendErr(res, "password must be 6 to 20 characters long!");
-
     user.password = password.trim();
     await user.save();
-
     // await ResetToken.findOneAndDelete({ owner: user._id });
-
     mailTransport().sendMail({
       from: process.env.MAILTRAP_USERNAME,
       to: user.email,
@@ -295,7 +262,6 @@ const resetPassword = async (req, res) => {
     res.status(400).send(error);
   }
 };
-
 // log in with google
 const client = new OAuth2Client(
   "801305115124-kp5gtb7a2f1ej1e2bgi7gqrh1iio4l9t.apps.googleusercontent.com"
@@ -309,15 +275,14 @@ const googlelogin = async (req, res) => {
         audience:
           "801305115124-kp5gtb7a2f1ej1e2bgi7gqrh1iio4l9t.apps.googleusercontent.com",
       })
-      .then((res) => {
-        const { email_verified, name, email, profileObj } = res.payload;
-        console.log(res);
+      .then((result) => {
+        const { email_verified, name, email, profileObj } = result.payload;
+        console.log(email_verified);
         if (email_verified) {
           userModel.findOne({ email }).exec((err, user) => {
             if (err) {
-              return res.status(400).json({
-                error: "Somethig went wrong...",
-              });
+              console.log(err);
+              return res.status(400).json(err);
             } else {
               if (user) {
                 const options = {
@@ -325,11 +290,11 @@ const googlelogin = async (req, res) => {
                 };
                 const token = jwt.sign(
                   { _id: user._id, role: user.role },
-                  process.env.secert_key,
+                  process.env.SECRET_KEY,
                   options
                 );
                 const result = {
-                  _id: user._idrsz,
+                  _id: user._id,
                   userName: name,
                   email,
                   role: "61a750d07acff210a70d2b8c",
@@ -344,6 +309,8 @@ const googlelogin = async (req, res) => {
                   role: "61a750d07acff210a70d2b8c",
                 });
                 newUser.save((err, data) => {
+                  console.log("err",err);
+                  console.log("data",data);
                   if (err) {
                     return res.status(400).send(err);
                   }
@@ -363,13 +330,11 @@ const googlelogin = async (req, res) => {
           });
         }
       });
-
     // console.log(tokenId);
   } catch (error) {
     res.status(400).send(error);
   }
 };
-
 module.exports = {
   register,
   login,
