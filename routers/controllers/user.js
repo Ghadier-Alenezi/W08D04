@@ -317,7 +317,7 @@ const googlelogin = async (req, res) => {
                   console.log(data);
                   const token = jwt.sign(
                     { _id: data._id },
-                    process.env.secert_key,
+                    process.env.secert,
                     {
                       expiresIn: "7d",
                     }
